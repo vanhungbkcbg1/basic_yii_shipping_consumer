@@ -1,0 +1,54 @@
+version: "3.5"
+services:
+  nginx:
+    container_name: nginx_shipping
+    image: nginx
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./:/code:delegated
+    ports:
+      - 8080:80
+    networks:
+      - nginx
+      - order_network
+    depends_on:
+      - php
+      - mysql
+  php:
+    container_name: php_shipping
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+    working_dir: /code
+    volumes:
+      - ./:/code:delegated
+    networks:
+      - nginx
+      - order_network
+    depends_on:
+      - mysql
+  mysql:
+    container_name: my_sql_shipping
+    image: mysql:5.6
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - 3307:3306
+    networks:
+      - nginx
+      - order_network
+    volumes:
+      - mysql_data_shipping:/var/lib/mysql
+
+
+networks:
+  nginx:
+    driver: bridge
+  order_network:
+    external:
+      name: basicyii_nginx
+volumes:
+  mysql_data_shipping:
